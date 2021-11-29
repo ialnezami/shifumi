@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-unused-vars
+const path = require('path');
 module.exports = function (app) {
-  // Add your custom middleware here. Remember that
-  // in Express, the order matters.
+  app.use('/shifumi', (req,res) => {
+    res.sendFile(path.join(__dirname+'/pages/shifumi.html'))
+  })
 };
