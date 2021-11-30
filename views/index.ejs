@@ -16,13 +16,11 @@
         <form class="row" id="login">
             <div class="mb-3 mt-3 col-5  m-auto">
                 <label for="text">Pseudo :</label>
-                <input type="hidden" name="idgame" class="form-control" id="idgame">
-                <input type="hidden" name="idplayer" class="form-control" id="idplayer">
                 <input type="text" class="form-control" id="pseudo" placeholder="Enter pseudo" name="pseudo">
             </div>
             <div class=" row">
                 <button type="button" class="btn btn-primary col-2 m-auto " id="playBtn">Play</button>
-
+                <button type="button" class="btn btn-primary col-2 m-auto " id="playAgain">Play again</button>
             </div>
         </form>
         <div id="msg" class="alert alert-success m-auto"></div>
@@ -40,9 +38,9 @@
             </div>
            
             <div class="btns row">
-                <div class="btn btn-primary col-2 m-auto " id="ciseau">A-Ciseau</div>
-                <div class="btn btn-primary col-2 m-auto " id="papier">B-Papier</div>
-                <div class="btn btn-primary col-2 m-auto " id="pierre">C-Pierre</div>
+                <button class="btn btn-outline-primary col-2 m-auto " id="ciseau">A-Ciseau</button>
+                <button class="btn btn-outline-primary col-2 m-auto " id="papier">B-Papier</button>
+                <button class="btn btn-outline-primary col-2 m-auto " id="pierre">C-Pierre</button>
             </div>
         </div>
     </div>
@@ -61,34 +59,44 @@
             client.configure(feathers.socketio(socket));
 
 
-
+            var IDGAME = null;
+            var IDPLAYER = null;
+            var IDPLAYERPOSITION=null;
+            var IDADV = null;
             $("#msg").hide()
-       
 
             $("#playBtn").click(async function () {
                  
                 $("#playBtn").hide()
-                $("#pseudo").attr("disabled", true);
                 const data = {
                     player: $('#pseudo').val(),
                 };
                 const reponse = await client.service('games').create(data);
-                $("#idgame").val(reponse._id);
+                IDGAME = reponse._id
                 $("#myname").html(data.player);
                 if (reponse.p2.name == null) {
                     $("#msg").html("<h1>En attente d'un adversaire</h1>");
                     $("#msg").show()
-                    $("#idplayer").val(1);
-                    $("#advname").html(reponse.p2.name)
+                    IDPLAYERPOSITION = 1;
                 } else {
                     $("#msg").html("<h1>Lets play a game !</h1>");
                     $("#msg").show()
-                    $("#idplayer").val(2);
-                    $("#advname").html(reponse.p1.name)
-                    $("#ciseau,#papier,#pierre").attr("disabled", true);
+                    IDADV = reponse.p1.name;
+                    $("#advname").html(IDADV)
+                    IDPLAYERPOSITION=2;
                 }
 
             });
+            $("#playAgain").hide()
+            $("#playAgain").click(async function (){
+                $("#mychoice, #advchoice").html("");
+                if(IDPLAYERPOSITION == 1){
+                    await client.service("games").patch(IDGAME, { p1: { name:$("#pseudo").val(), "choice": null }, p2: { name: IDADV, "choice": null } })
+                }else{
+                    await client.service("games").patch(IDGAME, { p1: { name: IDADV, "choice": null }, p2: { name:$("#pseudo").val(), "choice": null } })
+                }
+            });
+
             $(document).keyup(function (e) {
                 if ($("#pseudo").is(":focus")) {
 
@@ -117,14 +125,13 @@
                 const choice = "pierre"
                 setChoice(choice);
             });
-            $("#ciseau,#papier,#pierre").attr("disabled", true);
+
             async function setChoice(choice) {
                 $('#monImage').attr('src','/static/images/'+choice+'.png');
-                $("#ciseau,#papier,#pierre").attr("disabled", true);
+                // $("#ciseau,#papier,#pierre").attr("disabled", true);
                 $("#mychoice").html(choice);
-                const idgame = $('#idgame').val();
-                const idplayer = $('#idplayer').val();
-                if (idplayer == 1) {
+                const idgame = IDGAME;
+                if (IDPLAYERPOSITION == 1) {
                     client.service("games").patch(idgame, { p1: { "name": $("#pseudo").val(), choice: choice } })
                 } else {
                     client.service("games").patch(idgame, { p2: { "name": $("#pseudo").val(), choice: choice } })
@@ -141,38 +148,35 @@
                     setTimeout(() => {
                         $("#msg").hide()
                     }, 2000);
+                    $("#advname").html(game.p2.name);
                 }
             });
             client.service('games').on('patched', (game) => {
-
+                console.log("test");
                 if (game.p2.name == null) {
                     $("#msg").html("<h1>En attente d'un adversaire</h1>");
                 } else {
                     $("#msg").html("<h1>Let's play a game!</h1>");
-                    $("#ciseau,#papier,#pierre").attr("disabled", true);
                 }
-                const idplayer = $('#idplayer').val();
-                if (idplayer == 1) {
+                if(game.p1.choice == null && game.p2.choice == null){
+                    $("#mychoice, #advchoice").html("");
+                    console.log("test");
+                }
+                if (IDPLAYERPOSITION == 1) {
                     if (game.p1.choice != null) {
                         $("#advchoice").html(game.p2.choice);
-                       //TO DO $("#advchoiceimg").attr('src','/static/images/'+game.p2.choice+'.png');
-                        setTimeout(() => {
-                            $("#ciseau,#papier,#pierre").attr("disabled", false);
-                            $("#mychoice, #advchoice").html("");
-                            client.service("games").patch(game._id, { p1: { name:$("#pseudo").val(), "choice": null }, p2: { name: game.p2.name, "choice": null } })
-                        }, 10000);
                     }
                 } else {
                     if (game.p2.choice != null) {
                         $("#advchoice").html(game.p1.choice);
-                        setTimeout(() => {
-                            $("#ciseau,#papier,#pierre").attr("disabled", false);
-                            $("#mychoice, #advchoice").html("");
-                            client.service("games").patch(game._id, { p1: { name: game.p1.name, "choice": null }, p2: { name: $("#pseudo").val(), "choice": null } })
-                        }, 10000);
                     }
                 }
+                $("#playAgain").html("Play again");
+                $("#playAgain").show()
+            });
 
+            client.service("games").on("disconnect",async()=>{
+                await client.service('games').remove(idgame);
             });
 
         });

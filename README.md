@@ -1,6 +1,6 @@
 # shifumi
 
-> shifumi
+Bienvenue sur le projet Shifumi réalisé par Ibrahim et gurvan.
 
 ## About
 
