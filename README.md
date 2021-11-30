@@ -1,7 +1,7 @@
 # shifumi
 
 Bienvenue sur le projet Shifumi réalisé par Ibrahim et gurvan.
-Il est accesible sur Heroku à l'adresse suivante : https://shifumi-imr.herokuapp.com/
+Il est accesible sur Heroku à l'adresse suivante : https://shifumi-imr.herokuapp.com/. Le lien github du projet est : https://github.com/ibrahimsyr95/shifumi
 
 ## About
 
