@@ -18,6 +18,8 @@ const channels = require('./channels');
 
 const app = express(feathers());
 
+// set the view engine to ejs
+app.set('view engine', 'ejs');
 // Load app configuration
 app.configure(configuration());
 // Enable security, CORS, compression, favicon and body parsing
@@ -31,7 +33,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(favicon(path.join(app.get('public'), 'favicon.ico')));
 // Host the public folder
 //app.use('/', express.static(app.get('public')));
-
+//app.use('/static', express.static(__dirname + '/public'));
+app.use('/static', express.static('public'));
 // Set up Plugins and providers
 app.configure(express.rest());
 app.configure(socketio());

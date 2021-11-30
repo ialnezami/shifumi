@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Socket IO</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container mt-3">
+        <h2>Shifumi</h2>
+        <form class="row" id="login">
+            <div class="mb-3 mt-3 col-5  m-auto">
+                <label for="text">Pseudo :</label>
+                <input type="hidden" name="idgame" class="form-control" id="idgame">
+                <input type="hidden" name="idplayer" class="form-control" id="idplayer">
+                <input type="text" class="form-control" id="pseudo" placeholder="Enter pseudo" name="pseudo">
+            </div>
+            <div class=" row">
+                <button type="button" class="btn btn-primary col-2 m-auto " id="playBtn">Play</button>
+
+            </div>
+        </form>
+        <div id="msg" class="alert alert-success m-auto"></div>
+        <div id="board" class="mt-5">
+            <div id="resultat" class=" row" style="height: 20em;">
+                <div  class="card col-3 m-auto alert-success" style="height:15em">
+                    <div id="myname" class="card-header"></div>
+                    <div id="mychoice" class="card-body m-auto"> <img id="mychoiceimg"src="/static/images/pierre.png"></div>
+                </div>
+                
+                <div id="" class="card col-3 m-auto alert-danger" style="height:15em">
+                    <div id="advname" class="card-header">Adversaire</div>
+                    <div id="advchoice" class="card-body m-auto"> <img id="advchoiceimg"src="/static/images/pierre.png"></div>
+                </div>
+            </div>
+           
+            <div class="btns row">
+                <div class="btn btn-primary col-2 m-auto " id="ciseau">A-Ciseau</div>
+                <div class="btn btn-primary col-2 m-auto " id="papier">B-Papier</div>
+                <div class="btn btn-primary col-2 m-auto " id="pierre">C-Pierre</div>
+            </div>
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2/dist/socket.io.js"></script>
+    <script src="//unpkg.com/@feathersjs/client@^4.3.0/dist/feathers.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Establish a Socket.io connection
+            const socket = io();
+            // Initialize our Feathers client application through Socket.io
+            // with hooks and authentication.
+            const client = feathers();
+
+            client.configure(feathers.socketio(socket));
+            $("#msg").hide()
+            $("#playBtn").click(async function () {
+                $("#playBtn").hide()
+                $("#pseudo").attr("disabled", true);
+                const data = {
+                    player: $('#pseudo').val(),
+                };
+                const reponse = await client.service('games').create(data);
+                $("#idgame").val(reponse._id);
+                $("#myname").html(data.player);
+                if (reponse.p2.name == null) {
+                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                    $("#msg").show()
+                    $("#idplayer").val(1);
+                    $("#advname").html(reponse.p2.name)
+                } else {
+                    $("#msg").html("<h1>Lets play a game !</h1>");
+                    $("#msg").show()
+                    $("#idplayer").val(2);
+                    $("#advname").html(reponse.p1.name)
+                    $("#ciseau,#papier,#pierre").attr("disabled", true);
+                }
+
+            });
+            $(document).keyup(function (e) {
+                if ($("#pseudo").is(":focus")) {
+
+                } else {
+                    if (e.keyCode == 97 || e.keyCode == 65) {
+                        setChoice("ciseau");
+                    } else if (e.keyCode == 98 || e.keyCode == 66) {
+                        setChoice("papier");
+                    } else if (e.keyCode == 99 || e.keyCode == 67) {
+                        setChoice("pierre");
+                    }
+                }
+
+            });
+            $("#ciseau").click(async function () {
+                const choice = "ciseau"
+                setChoice(choice);
+
+            });
+            $("#papier").click(async function () {
+                const choice = "papier"
+                setChoice(choice);
+
+            });
+            $("#pierre").click(async function () {
+                const choice = "pierre"
+                setChoice(choice);
+            });
+            $("#ciseau,#papier,#pierre").attr("disabled", true);
+            async function setChoice(choice) {
+                $('#monImage').attr('src','/static/images/'+choice+'.png');
+                $("#ciseau,#papier,#pierre").attr("disabled", true);
+                $("#mychoice").html(choice);
+                const idgame = $('#idgame').val();
+                const idplayer = $('#idplayer').val();
+                if (idplayer == 1) {
+                    client.service("games").patch(idgame, { p1: { "name": $("#pseudo").val(), choice: choice } })
+                } else {
+                    client.service("games").patch(idgame, { p2: { "name": $("#pseudo").val(), choice: choice } })
+                }
+            }
+            // Listen to created events and add the new message in real-time
+            client.service('games').on('created', (game) => {
+
+                console.log(game);
+                if (game.p2.name == null) {
+                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                } else {
+                    $("#msg").html("<h1>Lets play a game!</h1>");
+                    setTimeout(() => {
+                        $("#msg").hide()
+                    }, 2000);
+                }
+            });
+            client.service('games').on('patched', (game) => {
+
+                if (game.p2.name == null) {
+                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                } else {
+                    $("#msg").html("<h1>Let's play a game!</h1>");
+                    $("#ciseau,#papier,#pierre").attr("disabled", true);
+                }
+                const idplayer = $('#idplayer').val();
+                if (idplayer == 1) {
+                    if (game.p1.choice != null) {
+                        $("#advchoice").html(game.p2.choice);
+                       //TO DO $("#advchoiceimg").attr('src','/static/images/'+game.p2.choice+'.png');
+                        setTimeout(() => {
+                            $("#ciseau,#papier,#pierre").attr("disabled", false);
+                            $("#mychoice, #advchoice").html("");
+                            client.service("games").patch(game._id, { p1: { name:$("#pseudo").val(), "choice": null }, p2: { name: game.p2.name, "choice": null } })
+                        }, 4000);
+                    }
+                } else {
+                    if (game.p2.choice != null) {
+                        $("#advchoice").html(game.p1.choice);
+                        setTimeout(() => {
+                            $("#ciseau,#papier,#pierre").attr("disabled", false);
+                            $("#mychoice, #advchoice").html("");
+                            client.service("games").patch(game._id, { p1: { name: game.p1.name, "choice": null }, p2: { name: $("#pseudo").val(), "choice": null } })
+                        }, 4000);
+                    }
+                }
+
+            });
+
+        });
+
+    </script>
+</body>
+
+</html>
