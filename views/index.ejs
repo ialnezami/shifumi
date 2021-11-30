@@ -59,8 +59,14 @@
             const client = feathers();
 
             client.configure(feathers.socketio(socket));
+
+
+
             $("#msg").hide()
+       
+
             $("#playBtn").click(async function () {
+                 
                 $("#playBtn").hide()
                 $("#pseudo").attr("disabled", true);
                 const data = {
@@ -87,11 +93,11 @@
                 if ($("#pseudo").is(":focus")) {
 
                 } else {
-                    if (e.keyCode == 97 || e.keyCode == 65) {
+                    if (e.keyCode == 97 || e.keyCode == 65) {//A 
                         setChoice("ciseau");
-                    } else if (e.keyCode == 98 || e.keyCode == 66) {
+                    } else if (e.keyCode == 98 || e.keyCode == 66) {//B
                         setChoice("papier");
-                    } else if (e.keyCode == 99 || e.keyCode == 67) {
+                    } else if (e.keyCode == 99 || e.keyCode == 67) {//C
                         setChoice("pierre");
                     }
                 }
@@ -154,7 +160,7 @@
                             $("#ciseau,#papier,#pierre").attr("disabled", false);
                             $("#mychoice, #advchoice").html("");
                             client.service("games").patch(game._id, { p1: { name:$("#pseudo").val(), "choice": null }, p2: { name: game.p2.name, "choice": null } })
-                        }, 4000);
+                        }, 10000);
                     }
                 } else {
                     if (game.p2.choice != null) {
@@ -163,7 +169,7 @@
                             $("#ciseau,#papier,#pierre").attr("disabled", false);
                             $("#mychoice, #advchoice").html("");
                             client.service("games").patch(game._id, { p1: { name: game.p1.name, "choice": null }, p2: { name: $("#pseudo").val(), "choice": null } })
-                        }, 4000);
+                        }, 10000);
                     }
                 }
 
