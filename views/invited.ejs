@@ -19,28 +19,25 @@
                 <input type="text" class="form-control" id="pseudo" placeholder="Enter pseudo" name="pseudo">
             </div>
             <div class="row m-auto">
-                <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playBtn">Play with
-                    random</button>
-                <!--<button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playBtnInvite">Invite to
-                    Play with</button>-->
-                <button type="button" class="btn btn-info col-md-4 col-xxl-3 m-auto " data-link=""
-                    id="inviteBtn">Invite</button>
+                <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playBtn">Play</button>
+              
             </div>
         </form>
         <div id="msg" class="alert alert-success m-auto text-center"></div>
         <div id="board" class="mt-5">
-            <div id="resultat" class="row">
+            <div id="resultat" class="row" >
                 <div class="card col-md-6 col-xxl-3 m-auto alert-success">
                     <div id="myname" class="card-header text-center"></div>
-                    <div class="card-body m-auto"> <img id="mychoiceimg" src="/static/images/pierre.png">
+                    <div  class="card-body m-auto"> <img id="mychoiceimg" src="/static/images/pierre.png">
                     </div>
                     <div id="mychoice" class="card-footer text-center"></div>
                 </div>
 
                 <div id="" class="card col-md-6 col-xxl-3 m-auto alert-danger">
                     <div id="advname" class="card-header text-center">Adversaire</div>
-                    <div id="" class="card-body m-auto"> <img id="advchoiceimg" src="/static/images/pierre.png"></div>
-                    <div id="advchoice" class="card-footer text-center"></div>
+                    <div id="" class="card-body m-auto"> <img id="advchoiceimg"
+                            src="/static/images/pierre.png"></div>
+                <div id="advchoice" class="card-footer text-center"></div>  
                 </div>
             </div>
 
@@ -48,7 +45,7 @@
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="ciseau">A-Ciseau</button>
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="papier">B-Papier</button>
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3" id="pierre">C-Pierre</button>
-                <button class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playAgain">Play
+                <button  class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playAgain">Play
                     again</button>
             </div>
         </div>
@@ -68,64 +65,33 @@
             client.configure(feathers.socketio(socket));
 
 
-            var IDGAME = null;
+            var IDGAME = "<%=id%>";
             var IDPLAYER = null;
-            var IDPLAYERPOSITION = null;
+            var IDPLAYERPOSITION = 2;
             var IDADV = null;
             var ACTIVE = true;
-            var link = window.location.host + "/games/";
             $("#msg").hide()
-            $("#inviteBtn").hide()
-            $("#inviteBtn").click(function () {
-                navigator.clipboard.writeText(link).then(function () {
-                    console.log('Async: Copying to clipboard was successful!');
-                }, function (err) {
-                    console.error('Async: Could not copy text: ', err);
-                });
-            })
+
             $("#playBtn").click(async function () {
 
                 $("#playBtn").hide()
-                $("#playBtnInvite").hide()
-                const data = {
-                    player: $('#pseudo').val(),
-                    completed:false,
-                };
-                const reponse = await client.service('games').create(data);
-                IDGAME = reponse._id;
-                link = link + IDGAME;
-               
+                 IDPLAYER =$('#pseudo').val();
+                
+                var reponse = await client.service("games").patch(IDGAME,  { p2: { name: IDPLAYER, "choice": null } })
+                IDGAME = reponse._id
+                IDADV = reponse.p1.name;
                 $("#myname").html(data.player);
                 if (reponse.p2.name == null) {
                     $("#msg").html("<h1>En attente d'un adversaire</h1>");
                     $("#msg").show()
-                    IDPLAYERPOSITION = 1;
                 } else {
                     $("#msg").html("<h1>Lets play a game !</h1>");
                     $("#msg").show()
-                    IDADV = reponse.p1.name;
+                  
                     $("#advname").html(IDADV)
-                    IDPLAYERPOSITION = 2;
+                  
                 }
 
-            });
-            $("#playBtnInvite").click(async function () {
-                $("#playBtn").hide()
-                $("#playBtnInvite").hide()
-                const data = {
-                    player: $('#pseudo').val(),
-                    completed:true
-                };
-                const reponse = await client.service('games').create(data);
-                IDGAME = reponse._id;
-                link = link + IDGAME;
-                $("#inviteBtn").show();
-                $("#myname").html(data.player);
-                if (reponse.p2.name == null) {
-                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
-                    $("#msg").show()
-                  
-                } 
             });
             $("#playAgain").hide()
             $("#playAgain").click(async function () {
@@ -181,42 +147,19 @@
                     client.service("games").patch(idgame, { p2: { "name": $("#pseudo").val(), choice: choice } })
                 }
             }
-            // Listen to created events and add the new message in real-time
-            client.service('games').on('created', (game) => {
-
-                console.log(game);
-                if (game.p2.name == null) {
-                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
-                } else {
-                    $("#msg").html("<h1>Lets play a game!</h1>");
-                    setTimeout(() => {
-                        $("#msg").hide()
-                    }, 2000);
-                    $("#advname").html(game.p2.name);
-                }
-            });
+           
 
             client.service('games').on('patched', (game) => {
                 if (IDPLAYERPOSITION == 1) {
                     if (game.p2.name == null) {
                         $("#msg").html("<h1>En attente d'un adversaire</h1>");
-                    }else{
-                        $("#advname").html(game.p2.name);
-                    }
+                    } 
                 } else {
                     if (game.p1.name == null) {
                         $("#msg").html("<h1>En attente d'un adversaire</h1>");
-                    }else{
-                        $("#advname").html(game.p1.name);
-                    }
+                    } 
                 }
-                if (game.p2.name == null) {
-                    $("#inviteBtn").show();
-                    
-                } else {
-                    $("#inviteBtn").hide();
-                   
-                }
+
 
                 if (game.p1.choice == null && game.p2.choice == null) {
                     $("#msg").html("<h1>choose again</h1>");
@@ -227,12 +170,12 @@
                     if (IDPLAYERPOSITION == 1) {
                         if (game.p1.choice == null) {
                             ACTIVE = true;
-
+                           
                         } else {
                             ACTIVE = false;
                             $('#mychoiceimg').attr('src', '/static/images/' + game.p1.choice + '.png');
                         }//
-
+                        
                     } else {
                         if (game.p2.choice == null) {
                             ACTIVE = true;
@@ -240,11 +183,11 @@
                             ACTIVE = false;
                             $('#mychoiceimg').attr('src', '/static/images/' + game.p2.choice + '.png');
                         }
-
+                       
                     }
 
                 }
-
+               
 
 
 
@@ -259,9 +202,9 @@
                     }
                 }
                 if (game.p1.choice != null && game.p2.choice != null) {
-                    if (IDPLAYERPOSITION == 1) {
+                    if(IDPLAYERPOSITION == 1){
                         $('#advchoiceimg').attr('src', '/static/images/' + game.p2.choice + '.png');
-                    } else {
+                    }else{
                         $('#advchoiceimg').attr('src', '/static/images/' + game.p1.choice + '.png');
                     }
                     if (game.p1.choice == game.p2.choice) {
@@ -330,7 +273,7 @@
                     }
                     $("#playAgain").show()
                     $("#msg").show();
-                } else {
+                }else{
                     $("#playAgain").hide()
                     $("#msg").removeClass("alert-danger");
                     $("#msg").addClass("alert-success");
