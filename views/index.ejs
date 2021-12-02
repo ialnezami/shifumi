@@ -13,34 +13,37 @@
 
     <div class="container mt-3">
         <h2>Shifumi</h2>
-        <form class="row" id="login">
+        <form class="row m-auto" id="login">
             <div class="mb-3 mt-3 col-5  m-auto">
                 <label for="text">Pseudo :</label>
                 <input type="text" class="form-control" id="pseudo" placeholder="Enter pseudo" name="pseudo">
             </div>
-            <div class=" row">
-                <button type="button" class="btn btn-primary col-2 m-auto " id="playBtn">Play</button>
-                <button type="button" class="btn btn-primary col-2 m-auto " id="playAgain">Play again</button>
+            <div class="row m-auto">
+                <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playBtn">Play</button>
+                <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playAgain">Play
+                    again</button>
             </div>
         </form>
         <div id="msg" class="alert alert-success m-auto"></div>
         <div id="board" class="mt-5">
-            <div id="resultat" class=" row" style="height: 20em;">
-                <div  class="card col-3 m-auto alert-success" style="height:15em">
+            <div id="resultat" class="row" style="height: 20em;">
+                <div class="card col-md-6 col-xxl-3 m-auto alert-success">
                     <div id="myname" class="card-header"></div>
-                    <div id="mychoice" class="card-body m-auto"> <img id="mychoiceimg"src="/static/images/pierre.png"></div>
+                    <div id="mychoice" class="card-body m-auto"> <img id="mychoiceimg" src="/static/images/pierre.png">
+                    </div>
                 </div>
-                
-                <div id="" class="card col-3 m-auto alert-danger" style="height:15em">
+
+                <div id="" class="card col-md-6 col-xxl-3 m-auto alert-danger">
                     <div id="advname" class="card-header">Adversaire</div>
-                    <div id="advchoice" class="card-body m-auto"> <img id="advchoiceimg"src="/static/images/pierre.png"></div>
+                    <div id="advchoice" class="card-body m-auto"> <img id="advchoiceimg"
+                            src="/static/images/pierre.png"></div>
                 </div>
             </div>
-           
+
             <div class="btns row">
-                <button class="btn btn-outline-primary col-2 m-auto " id="ciseau">A-Ciseau</button>
-                <button class="btn btn-outline-primary col-2 m-auto " id="papier">B-Papier</button>
-                <button class="btn btn-outline-primary col-2 m-auto " id="pierre">C-Pierre</button>
+                <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="ciseau">A-Ciseau</button>
+                <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="papier">B-Papier</button>
+                <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3" id="pierre">C-Pierre</button>
             </div>
         </div>
     </div>
@@ -61,12 +64,13 @@
 
             var IDGAME = null;
             var IDPLAYER = null;
-            var IDPLAYERPOSITION=null;
+            var IDPLAYERPOSITION = null;
             var IDADV = null;
+            var ACTIVE = true;
             $("#msg").hide()
 
             $("#playBtn").click(async function () {
-                 
+
                 $("#playBtn").hide()
                 const data = {
                     player: $('#pseudo').val(),
@@ -83,17 +87,17 @@
                     $("#msg").show()
                     IDADV = reponse.p1.name;
                     $("#advname").html(IDADV)
-                    IDPLAYERPOSITION=2;
+                    IDPLAYERPOSITION = 2;
                 }
 
             });
             $("#playAgain").hide()
-            $("#playAgain").click(async function (){
+            $("#playAgain").click(async function () {
                 $("#mychoice, #advchoice").html("");
-                if(IDPLAYERPOSITION == 1){
-                    await client.service("games").patch(IDGAME, { p1: { name:$("#pseudo").val(), "choice": null }, p2: { name: IDADV, "choice": null } })
-                }else{
-                    await client.service("games").patch(IDGAME, { p1: { name: IDADV, "choice": null }, p2: { name:$("#pseudo").val(), "choice": null } })
+                if (IDPLAYERPOSITION == 1) {
+                    await client.service("games").patch(IDGAME, { p1: { name: $("#pseudo").val(), "choice": null }, p2: { name: IDADV, "choice": null } })
+                } else {
+                    await client.service("games").patch(IDGAME, { p1: { name: IDADV, "choice": null }, p2: { name: $("#pseudo").val(), "choice": null } })
                 }
             });
 
@@ -127,7 +131,11 @@
             });
 
             async function setChoice(choice) {
-                $('#monImage').attr('src','/static/images/'+choice+'.png');
+                if (!ACTIVE) {
+                    return;
+                }
+
+                $('#monImage').attr('src', '/static/images/' + choice + '.png');
                 // $("#ciseau,#papier,#pierre").attr("disabled", true);
                 $("#mychoice").html(choice);
                 const idgame = IDGAME;
@@ -152,16 +160,42 @@
                 }
             });
             client.service('games').on('patched', (game) => {
-                console.log("test");
-                if (game.p2.name == null) {
-                    $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                if (IDPLAYERPOSITION == 1) {
+                    if (game.p2.name == null) {
+                        $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                    } 
                 } else {
-                    $("#msg").html("<h1>Let's play a game!</h1>");
+                    if (game.p1.name == null) {
+                        $("#msg").html("<h1>En attente d'un adversaire</h1>");
+                    } 
                 }
-                if(game.p1.choice == null && game.p2.choice == null){
+
+
+                if (game.p1.choice == null && game.p2.choice == null) {
+                    $("#msg").html("<h1>choose again</h1>");
                     $("#mychoice, #advchoice").html("");
-                    console.log("test");
+                    ACTIVE = true;
+
+                } else {
+                    if (IDPLAYERPOSITION == 1) {
+                        if (game.p1.choice == null) {
+                            ACTIVE = true;
+                        } else {
+                            ACTIVE = false;
+                        }
+                    } else {
+                        if (game.p2.choice == null) {
+                            ACTIVE = true;
+                        } else {
+                            ACTIVE = false;
+                        }
+                    }
+
                 }
+
+
+
+
                 if (IDPLAYERPOSITION == 1) {
                     if (game.p1.choice != null) {
                         $("#advchoice").html(game.p2.choice);
@@ -171,11 +205,80 @@
                         $("#advchoice").html(game.p1.choice);
                     }
                 }
-                $("#playAgain").html("Play again");
-                $("#playAgain").show()
+                if (game.p1.choice != null && game.p2.choice != null) {
+                    if (game.p1.choice == game.p2.choice) {
+                        $("#msg").html("<h1>Egalité</h1>");
+                    } else if (game.p1.choice == "pierre" && game.p2.choice == "ciseau") {
+
+                        if (IDPLAYERPOSITION == 1) {
+                            $("#msg").html("<h1>" + game.p1.name + " Félicitation Vous avez gagné &#129321;&#129321; !</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p2.name + " Oops, Vous avez Perdu &#128549;&#128549;!</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    } else if (game.p1.choice == "ciseau" && game.p2.choice == "papier") {
+                        if (IDPLAYERPOSITION == 1) {
+                            $("#msg").html("<h1>" + game.p1.name + " Félicitation Vous avez gagné &#129321;&#129321;!</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p2.name + " Oops, Vous avez Perdu &#128549;&#128549; !</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    } else if (game.p1.choice == "papier" && game.p2.choice == "pierre") {
+                        if (IDPLAYERPOSITION == 1) {
+                            $("#msg").html("<h1>" + game.p1.name + " Félicitation Vous avez gagné &#129321;&#129321;!</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p2.name + " Oops, Vous avez Perdu &#128549;&#128549; !</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    } else if (game.p2.choice == "pierre" && game.p1.choice == "ciseau") {
+                        if (IDPLAYERPOSITION != 1) {
+                            $("#msg").html("<h1>" + game.p2.name + " Félicitation Vous avez gagné &#129321;&#129321; !</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p1.name + " Oops, Vous avez Perdu &#128549;&#128549; !</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    } else if (game.p2.choice == "ciseau" && game.p1.choice == "papier") {
+                        if (IDPLAYERPOSITION != 1) {
+                            $("#msg").html("<h1>" + game.p2.name + " Félicitation Vous avez gagné &#129321;&#129321;!</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p1.name + " Oops, Vous avez Perdu &#128549;&#128549;  !</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    } else if (game.p2.choice == "papier" && game.p1.choice == "pierre") {
+                        if (IDPLAYERPOSITION != 1) {
+                            $("#msg").html("<h1>" + game.p2.name + " Félicitation Vous avez gagné &#129321;&#129321;!</h1>");
+                            $("#msg").removeClass("alert-danger");
+                            $("#msg").addClass("alert-success");
+                        } else {
+                            $("#msg").html("<h1>" + game.p1.name + " Oops, Vous avez Perdu &#128549;&#128549; !</h1>");
+                            $("#msg").addClass("alert-danger");
+                            $("#msg").removeClass("alert-success");
+                        }
+                    }
+                    $("#playAgain").show()
+                    $("#msg").show();
+                }else{
+                    $("#playAgain").hide()
+                }
+
             });
 
-            client.service("games").on("disconnect",async()=>{
+            client.service("games").on("disconnect", async () => {
                 await client.service('games').remove(idgame);
             });
 
