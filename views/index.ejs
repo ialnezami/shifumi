@@ -182,7 +182,7 @@
                 }
             }
             // Listen to created events and add the new message in real-time
-            if(IDPLAYER!=null)
+           
             client.service('games').on('created', (game) => {
 
                 console.log(game);
@@ -196,8 +196,9 @@
                     $("#advname").html(game.p2.name);
                 }
             });
-            if(IDPLAYER!=null)
-            client.service('games').on('patched', (game) => {
+            
+            client.service('games').on('patched', async (game) => {
+              var game=  await client.service('games').get(IDGAME);
                 if (IDPLAYERPOSITION == 1) {
                     if (game.p2.name == null) {
                         $("#msg").html("<h1>En attente d'un adversaire</h1>");
