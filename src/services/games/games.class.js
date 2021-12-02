@@ -3,7 +3,7 @@ const { Service } = require('feathers-nedb');
 exports.Games = class Games extends Service {
     async create(data, params) {
         // This is the information we want 
-        const { player,completed} = data;
+        const { player} = data;
       
         const game = await super.find({query: {completed: false}});
         console.log("searching for a game");
@@ -15,7 +15,7 @@ exports.Games = class Games extends Service {
         }else{
             console.log("no game found");
             const gameData = { 
-            completed:completed,
+            completed:false,
             p1:
                 {"name":player,choice:null},
             p2: 

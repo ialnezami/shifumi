@@ -89,7 +89,7 @@
                 $("#playBtnInvite").hide()
                 const data = {
                     player: $('#pseudo').val(),
-                    completed:false,
+                 
                 };
                 const reponse = await client.service('games').create(data);
                 IDGAME = reponse._id;
