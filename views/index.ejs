@@ -20,23 +20,24 @@
             </div>
             <div class="row m-auto">
                 <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playBtn">Play</button>
-                <button type="button" class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playAgain">Play
-                    again</button>
+              
             </div>
         </form>
-        <div id="msg" class="alert alert-success m-auto"></div>
+        <div id="msg" class="alert alert-success m-auto text-center"></div>
         <div id="board" class="mt-5">
-            <div id="resultat" class="row" style="height: 20em;">
+            <div id="resultat" class="row" >
                 <div class="card col-md-6 col-xxl-3 m-auto alert-success">
-                    <div id="myname" class="card-header"></div>
-                    <div id="mychoice" class="card-body m-auto"> <img id="mychoiceimg" src="/static/images/pierre.png">
+                    <div id="myname" class="card-header text-center"></div>
+                    <div  class="card-body m-auto"> <img id="mychoiceimg" src="/static/images/pierre.png">
                     </div>
+                    <div id="mychoice" class="card-footer text-center"></div>
                 </div>
 
                 <div id="" class="card col-md-6 col-xxl-3 m-auto alert-danger">
-                    <div id="advname" class="card-header">Adversaire</div>
-                    <div id="advchoice" class="card-body m-auto"> <img id="advchoiceimg"
+                    <div id="advname" class="card-header text-center">Adversaire</div>
+                    <div id="" class="card-body m-auto"> <img id="advchoiceimg"
                             src="/static/images/pierre.png"></div>
+                <div id="advchoice" class="card-footer text-center"></div>  
                 </div>
             </div>
 
@@ -44,6 +45,8 @@
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="ciseau">A-Ciseau</button>
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3 " id="papier">B-Papier</button>
                 <button class="btn btn-outline-primary  m-auto col-md-4 col-xxl-3" id="pierre">C-Pierre</button>
+                <button  class="btn btn-primary col-md-4 col-xxl-3 m-auto " id="playAgain">Play
+                    again</button>
             </div>
         </div>
     </div>
@@ -135,7 +138,7 @@
                     return;
                 }
 
-                $('#monImage').attr('src', '/static/images/' + choice + '.png');
+                $('#mychoiceimg').attr('src', '/static/images/' + choice + '.png');
                 // $("#ciseau,#papier,#pierre").attr("disabled", true);
                 $("#mychoice").html(choice);
                 const idgame = IDGAME;
@@ -159,6 +162,7 @@
                     $("#advname").html(game.p2.name);
                 }
             });
+
             client.service('games').on('patched', (game) => {
                 if (IDPLAYERPOSITION == 1) {
                     if (game.p2.name == null) {
@@ -180,18 +184,24 @@
                     if (IDPLAYERPOSITION == 1) {
                         if (game.p1.choice == null) {
                             ACTIVE = true;
+                           
                         } else {
                             ACTIVE = false;
-                        }
+                            $('#mychoiceimg').attr('src', '/static/images/' + game.p1.choice + '.png');
+                        }//
+                        
                     } else {
                         if (game.p2.choice == null) {
                             ACTIVE = true;
                         } else {
                             ACTIVE = false;
+                            $('#mychoiceimg').attr('src', '/static/images/' + game.p2.choice + '.png');
                         }
+                       
                     }
 
                 }
+               
 
 
 
@@ -206,6 +216,11 @@
                     }
                 }
                 if (game.p1.choice != null && game.p2.choice != null) {
+                    if(IDPLAYERPOSITION == 1){
+                        $('#advchoiceimg').attr('src', '/static/images/' + game.p2.choice + '.png');
+                    }else{
+                        $('#advchoiceimg').attr('src', '/static/images/' + game.p1.choice + '.png');
+                    }
                     if (game.p1.choice == game.p2.choice) {
                         $("#msg").html("<h1>Egalité</h1>");
                     } else if (game.p1.choice == "pierre" && game.p2.choice == "ciseau") {
@@ -274,6 +289,8 @@
                     $("#msg").show();
                 }else{
                     $("#playAgain").hide()
+                    $("#msg").removeClass("alert-danger");
+                    $("#msg").addClass("alert-success");
                 }
 
             });
